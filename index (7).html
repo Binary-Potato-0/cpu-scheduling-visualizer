@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPU Scheduling Visualizer</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="4" rx="1"/><rect x="1" y="9" width="9" height="4" rx="1"/></svg>
+    </div>
+    <div class="logo-text">CPU Scheduler <span>/ Visualizer</span></div>
+  </div>
+  <div class="hdiv"></div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="switchMode('single')">Single</button>
+    <button class="mode-tab" onclick="switchMode('compare')">Compare All</button>
+  </div>
+  <div class="hright">
+    <div class="sdot"></div>
+    <span class="stxt">ready</span>
+    <div class="hdiv"></div>
+    <button class="hbtn" onclick="exportPDF()">⬇ Export PDF</button>
+  </div>
+</header>
+
+<!-- ── LAYOUT ── -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside>
+
+    <!-- Add Process -->
+    <div class="ss">
+      <div class="slabel">Add Process</div>
+      <div class="field">
+        <label>Arrival Time</label>
+        <input type="number" id="arr" min="0" value="0">
+      </div>
+      <div class="field">
+        <label>Burst Time</label>
+        <input type="number" id="burst" min="1" value="3">
+      </div>
+      <div class="field" id="pri-field" style="display:none">
+        <label>Priority <span style="color:var(--text3)">(lower = higher priority)</span></label>
+        <input type="number" id="pri" min="1" value="1">
+      </div>
+      <div class="brow">
+        <button class="btn btn-p" style="flex:1" onclick="addProc()">+ Add</button>
+        <button class="btn" onclick="randomProcs()">Random</button>
+      </div>
+      <div id="err" class="errmsg"></div>
+    </div>
+
+    <!-- Queue -->
+    <div class="ss" style="flex:1">
+      <div class="slabel">Queue</div>
+      <div class="proc-tags" id="plist">
+        <span class="ehint">No processes yet...</span>
+      </div>
+      <button class="btn" style="width:100%;margin-top:10px;color:#f472b6;border-color:rgba(244,114,182,.15)" onclick="clearAll()">
+        Clear all
+      </button>
+    </div>
+
+    <!-- Algorithm (Single mode) -->
+    <div class="ss" id="algo-section">
+      <div class="slabel">Algorithm</div>
+      <div class="field">
+        <label>Select Algorithm</label>
+        <select id="algo" onchange="onAlgoChange()">
+          <option value="fcfs">FCFS — First Come First Served</option>
+          <option value="sjf">SJF — Shortest Job First</option>
+          <option value="srtf">SRTF — Shortest Remaining Time First</option>
+          <option value="rr">Round Robin</option>
+          <option value="priority">Priority Scheduling</option>
+          <option value="hrrn">HRRN — Highest Response Ratio Next</option>
+          <option value="mq">Multiple Queue Scheduling</option>
+          <option value="mfq">Multilevel Feedback Queue</option>
+        </select>
+      </div>
+      <div class="field" id="qfield" style="display:none">
+        <label>Quantum — <span id="qval">2</span></label>
+        <input type="range" id="quantum" min="1" max="10" value="2"
+          oninput="document.getElementById('qval').textContent=this.value">
+      </div>
+      <div id="algo-info" style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:6px;line-height:15px"></div>
+    </div>
+
+    <!-- Settings (Compare mode) -->
+    <div class="ss hidden" id="cmp-section">
+      <div class="slabel">RR / MFQ Settings</div>
+      <div class="field">
+        <label>RR Quantum — <span id="cqval">2</span></label>
+        <input type="range" id="cquantum" min="1" max="10" value="2"
+          oninput="document.getElementById('cqval').textContent=this.value">
+      </div>
+    </div>
+
+    <!-- Run -->
+    <div class="ss">
+      <button class="btn-run" onclick="runActive()">Run</button>
+    </div>
+
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main id="main">
+    <div class="empty-state" id="empty">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="4" rx="1"/>
+          <rect x="3" y="11" width="12" height="4" rx="1"/>
+          <rect x="3" y="17" width="7" height="4" rx="1"/>
+        </svg>
+      </div>
+      <p>Add processes and click Run</p>
+    </div>
+    <div id="output" class="hidden"></div>
+  </main>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
