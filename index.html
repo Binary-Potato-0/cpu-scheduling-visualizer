@@ -43,9 +43,40 @@
   <div class="hright"> 
     <div class="sdot"></div><span class="stxt">ready</span> 
     <div class="hdiv"></div> 
+    <button class="hbtn" style="color:var(--mag2);border-color:var(--border3)" onclick="openStudyGuide()">📖 Study Guide</button>
     <button class="hbtn" onclick="exportPDF()">⬇ Export PDF</button> 
   </div> 
 </header> 
+
+<!-- Study Guide Modal -->
+<div id="study-modal" class="modal-overlay hidden" onclick="closeStudyGuide(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>📖 CPU Scheduling Study Guide</h2>
+      <button class="modal-close" onclick="closeStudyGuide()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="study-section">
+        <h3>Core Formulas</h3>
+        <ul>
+          <li><strong>Turnaround Time (TAT)</strong> = Finish Time - Arrival Time</li>
+          <li><strong>Waiting Time (WT)</strong> = Turnaround Time - Burst Time</li>
+          <li><strong>Response Time</strong> = First Start Time - Arrival Time <em>(Usually same as WT in non-preemptive)</em></li>
+        </ul>
+      </div>
+      <div class="study-section">
+        <h3>Algorithms Cheat Sheet</h3>
+        <div class="algo-def"><strong>FCFS (First Come First Served):</strong> Simplest non-preemptive algorithm. Processes run in the exact order they arrive. Prone to the <em>Convoy Effect</em> (short processes stuck behind a long one).</div>
+        <div class="algo-def"><strong>SJF (Shortest Job First):</strong> Non-preemptive. Always picks the waiting process with the shortest burst time. Provably optimal for average waiting time, but risks starvation for long processes.</div>
+        <div class="algo-def"><strong>SRTF (Shortest Remaining Time First):</strong> Preemptive version of SJF. If a new process arrives with a shorter burst than the currently running process's <em>remaining</em> time, the CPU preempts the current process.</div>
+        <div class="algo-def"><strong>Round Robin (RR):</strong> Preemptive. Processes take turns running for a fixed time slice (quantum). If they don't finish, they go to the back of the queue. Great for responsiveness.</div>
+        <div class="algo-def"><strong>Priority Scheduling:</strong> Runs highest priority process first. Can be preemptive or non-preemptive. Often requires <em>Aging</em> to solve starvation.</div>
+        <div class="algo-def"><strong>HRRN (Highest Response Ratio Next):</strong> Non-preemptive. Ratio = <code>(Waiting Time + Burst) / Burst</code>. Favors shorter jobs but gradually increases priority of long-waiting jobs to prevent starvation.</div>
+        <div class="algo-def"><strong>Multilevel Feedback Queue (MFQ):</strong> Complex preemptive algorithm with multiple queues. New processes start at the top priority queue (usually small RR quantum). If they use their full quantum, they are <em>demoted</em> to a lower priority queue with a larger quantum (or FCFS). Punishes CPU hogs and favors interactive I/O bounds.</div>
+      </div>
+    </div>
+  </div>
+</div>
  
 <div class="layout"> 
 <aside> 
