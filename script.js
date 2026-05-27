@@ -5,6 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 5000); // Remove after 5 seconds to free up DOM
 });
 
+function openStudyGuide() {
+  document.getElementById('study-modal').classList.remove('hidden');
+}
+
+function closeStudyGuide(e) {
+  if (e && e.target.id !== 'study-modal' && !e.target.classList.contains('modal-close')) return;
+  document.getElementById('study-modal').classList.add('hidden');
+}
+
 const COLORS=['#c026d3','#3b82f6','#8b5cf6','#06b6d4','#ec4899','#f59e0b','#10b981','#ef4444','#f97316','#14b8a6','#6366f1','#84cc16']; 
 const ALGO_INFO={ 
   fcfs:'Non-preemptive. Runs in arrival order.', 
@@ -307,6 +316,72 @@ function mfq(ps){
 } 
  
 /* ═══════════════════════════════════ 
+   EXPLAINER LOG GENERATOR 
+═══════════════════════════════════ */
+function generateStepByStepLog(algo, ps, segs, stats) {
+  let events = [];
+  
+  // 1. Log Arrivals
+  ps.forEach(p => {
+    events.push({ t: p.arr, type: 'arrival', id: p.id, burst: p.burst, pri: p.pri });
+  });
+
+  // 2. Log Execution Starts & Interrupts
+  let lastRunning = null;
+  segs.filter(s => s.id !== 'idle').forEach(s => {
+    events.push({ t: s.start, type: 'run', id: s.id, q: s.queue, lv: s.level });
+    events.push({ t: s.end, type: 'stop', id: s.id });
+  });
+
+  // Sort events by time, then by type (arrival first, then stop, then run)
+  events.sort((a,b) => {
+    if (a.t !== b.t) return a.t - b.t;
+    const typeOrder = { 'arrival': 1, 'stop': 2, 'run': 3 };
+    return typeOrder[a.type] - typeOrder[b.type];
+  });
+
+  let html = `<div class="explainer-log"><div class="explainer-title">Execution Log & Calculations</div>`;
+  
+  let currentRunning = null;
+  let remaining = {};
+  ps.forEach(p => remaining[p.id] = p.burst);
+
+  events.forEach(e => {
+    const c = COLORS[ci(e.id)%COLORS.length];
+    const pidHTML = `<span class="el-proc" style="background:${c}22; color:${c}; border:1px solid ${c}44">P${e.id}</span>`;
+    
+    html += `<div class="el-event"><span class="el-time">t=${e.t}</span> `;
+    
+    if (e.type === 'arrival') {
+      const priStr = algo === 'priority' ? ` (Priority: ${e.pri})` : '';
+      html += `${pidHTML} arrives. Needs ${e.burst}ms CPU time.${priStr}`;
+    } else if (e.type === 'run') {
+      if (currentRunning !== e.id) {
+        currentRunning = e.id;
+        const qStr = e.q ? ` in ${e.q}` : e.lv ? ` at Level ${e.lv}` : '';
+        html += `${pidHTML} starts running${qStr}.`;
+      }
+    } else if (e.type === 'stop') {
+      if (currentRunning === e.id) {
+        currentRunning = null;
+        const st = stats.find(x => x.id === e.id);
+        if (st && st.finish === e.t) {
+          html += `${pidHTML} finishes execution! <br>
+                   <span class="el-calc">⤷ Turnaround: ${st.finish} - ${st.arr} (arrival) = <strong>${st.tat}ms</strong></span><br>
+                   <span class="el-calc">⤷ Waiting: ${st.tat} - ${st.burst} (burst) = <strong>${st.wt}ms</strong></span>`;
+        } else {
+           html += `${pidHTML} is preempted or paused.`;
+        }
+      }
+    }
+    html += `</div>`;
+  });
+
+  html += `</div>`;
+  return html;
+}
+
+/* ═══════════════════════════════════ 
    STATS + RENDER 
 ═══════════════════════════════════ */ 
 function computeStats(segs,ps){ 
@@ -581,6 +656,8 @@ function runSingle(){
     </div>
   </div>`;
 
+  const explainerLogHTML = generateStepByStepLog(algo, procs, segs, st);
+
   showOut(`<div class="rblock"> 
     <div class="rheader"><span class="rtitle">${NAMES[algo]}${idleNote}</span><span class="rbadge">${BADGES[algo]}</span></div> 
     ${starvWarn(st,algo)} 
@@ -588,6 +665,7 @@ function runSingle(){
     ${playPanel}
     <div class="gpanel">${extra}${buildLegend(st)}${buildGantt(segs,total,'g-s')}</div> 
     ${buildTable(st,algo==='priority')} 
+    ${explainerLogHTML}
     ${algo==='rr'?buildQChart(procs,q):''} 
   </div>`); 
   setTimeout(()=>{animate('g-s'); [0,1,2].forEach(i=>animate('mqg-'+i)); [0,1,2].forEach(i=>animate('mfqg-'+i));},60); 
@@ -634,3 +712,4 @@ function runCompare(){
 function exportPDF(){ 
   if(document.getElementById('output').classList.contains('hidden')){alert('Run an algorithm first.');return;} 
   window.print(); 
+} 
